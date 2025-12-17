@@ -1,0 +1,80 @@
+filebeat.inputs:
+  # Docker container logs with live streaming
+  - type: container
+    paths:
+      - "/var/lib/docker/containers/*/*.log"
+    stream: all
+    close_inactive: 5m
+    scan_frequency: 1s
+    harvester_buffer_size: 16384
+    max_bytes: 10485760
+    processors:
+      - add_docker_metadata:
+          host: "unix:///var/run/docker.sock"
+      - decode_json_fields:
+          fields: ["message"]
+          target: ""
+          overwrite_keys: true
+      - timestamp:
+          field: time
+          layouts:
+            - "2006-01-02T15:04:05.000000000Z"
+            - "2006-01-02T15:04:05Z"
+          test:
+            - "2019-06-22T16:33:51Z"
+      - drop_fields:
+          fields: ["host.architecture", "host.os.family"]
+
+  # Application logs with live monitoring
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/*.log
+      - /var/log/**/*.log
+      - /app/logs/*.log # Add your app log paths
+    exclude_files: ['\.gz$', '\.zip$']
+    scan_frequency: 1s
+    close_inactive: 5m
+    multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+    multiline.negate: true
+    multiline.match: after
+    fields:
+      logtype: application
+    fields_under_root: true
+
+  # Real-time stdin input for testing
+  - type: stdin
+    enabled: false
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch-local:9200"]
+  index: "filebeat-%{+yyyy.MM.dd}"
+  template.name: "filebeat"
+  template.pattern: "filebeat-*"
+  bulk_max_size: 1000
+  flush_interval: 1s
+  worker: 2
+
+setup.template.name: "filebeat"
+setup.template.pattern: "filebeat-*"
+setup.template.enabled: true
+
+setup.kibana:
+  host: "http://kibana-local:5601"
+
+setup.dashboards.enabled: true
+setup.ilm.enabled: false
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~

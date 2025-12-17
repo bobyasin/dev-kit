@@ -1,0 +1,47 @@
+server.name: kibana
+server.host: "0.0.0.0"
+elasticsearch.hosts: ["http://elasticsearch-local:9200"]
+
+# APM Configuration
+xpack.apm.enabled: true
+xpack.apm.ui.enabled: true
+
+# Fleet configuration
+xpack.fleet.enabled: true
+
+# Security settings (disabled for development)
+xpack.security.enabled: false
+xpack.encryptedSavedObjects.encryptionKey: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+# UI Theme Configuration - Dark Mode
+uiSettings.overrides:
+  theme:darkMode: true
+  theme:version: v8
+  defaultIndex: "filebeat-*"
+  timepicker:timeDefaults: '{ "from": "now-15m", "to": "now" }'
+  discover:sampleSize: 1000
+  histogram:barTarget: 50
+
+# Additional UI customizations
+server.customResponseHeaders:
+  "X-Frame-Options": "SAMEORIGIN"
+
+# Machine Learning (if you want ML features)
+xpack.ml.enabled: true
+
+# Monitoring (self-monitoring)
+monitoring.enabled: true
+monitoring.kibana.collection.enabled: true
+
+# Alerting and Actions
+xpack.actions.enabled: true
+xpack.alerting.enabled: true
+
+# Canvas for presentations
+xpack.canvas.enabled: true
+
+# Maps for geospatial data
+xpack.maps.enabled: true
+
+# Uptime monitoring
+xpack.uptime.enabled: true

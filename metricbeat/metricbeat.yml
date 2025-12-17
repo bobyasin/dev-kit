@@ -1,0 +1,187 @@
+metricbeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+metricbeat.modules:
+  # System module
+  - module: system
+    metricsets:
+      - cpu
+      - load
+      - memory
+      - network
+      - process
+      - process_summary
+      - socket_summary
+      - filesystem
+      - fsstat
+    enabled: true
+    period: 10s
+    processes: [".*"]
+    cpu.metrics: ["percentages", "normalized_percentages"]
+    core.metrics: ["percentages"]
+
+  # Docker module
+  - module: docker
+    metricsets:
+      - "container"
+      - "cpu"
+      - "diskio"
+      - "healthcheck"
+      - "info"
+      - "memory"
+      - "network"
+    hosts: ["unix:///var/run/docker.sock"]
+    period: 10s
+    enabled: true
+
+  # Elasticsearch module
+  - module: elasticsearch
+    metricsets:
+      - node
+      - node_stats
+      - cluster_stats
+    period: 10s
+    hosts: ["http://elasticsearch-local:9200"]
+    enabled: true
+
+  # Kibana module
+  - module: kibana
+    metricsets:
+      - status
+    period: 10s
+    hosts: ["http://kibana-local:5601"]
+    enabled: true
+
+  # MySQL module
+  - module: mysql
+    metricsets:
+      - status
+    period: 10s
+    hosts: ["tcp(mysql-local:3306)/"]
+    username: appuser
+    password: apppass
+    enabled: true
+
+  # PostgreSQL module
+  - module: postgresql
+    metricsets:
+      - database
+      - bgwriter
+      - activity
+    period: 10s
+    hosts: ["postgres://appuser:apppass@postgres-local:5432/appdb?sslmode=disable"]
+    enabled: true
+
+  # MongoDB module - Single Instance
+  - module: mongodb
+    metricsets:
+      - dbstats
+      - status
+      - collstats
+      - metrics
+    period: 10s
+    hosts: ["mongodb://admin:adminpass@mongodb-local:27017"]
+    enabled: true
+
+  # MongoDB module - Replica Set Primary
+  - module: mongodb
+    metricsets:
+      - dbstats
+      - status
+      - collstats
+      - metrics
+      - replstatus
+    period: 10s
+    hosts: ["mongodb://admin:adminpass@mongo-primary:27017"]
+    enabled: true
+
+  # MongoDB module - Replica Set Secondary 1
+  - module: mongodb
+    metricsets:
+      - dbstats
+      - status
+      - collstats
+      - metrics
+      - replstatus
+    period: 10s
+    hosts: ["mongodb://admin:adminpass@mongo-secondary1:27017"]
+    enabled: true
+
+  # MongoDB module - Replica Set Secondary 2
+  - module: mongodb
+    metricsets:
+      - dbstats
+      - status
+      - collstats
+      - metrics
+      - replstatus
+    period: 10s
+    hosts: ["mongodb://admin:adminpass@mongo-secondary2:27017"]
+    enabled: true
+
+  # Redis module - Single Instance
+  - module: redis
+    metricsets:
+      - info
+      - keyspace
+    period: 10s
+    hosts: ["redis-local:6379"]
+    enabled: true
+
+  # Redis module - Sentinel Master
+  - module: redis
+    metricsets:
+      - info
+      - keyspace
+    period: 10s
+    hosts: ["redis-master:6379"]
+    enabled: true
+
+  # Redis module - Sentinel Slave
+  - module: redis
+    metricsets:
+      - info
+      - keyspace
+    period: 10s
+    hosts: ["redis-slave:6379"]
+    enabled: true
+
+  # RabbitMQ module
+  - module: rabbitmq
+    metricsets:
+      - node
+      - queue
+      - connection
+      - exchange
+    period: 10s
+    hosts: ["http://user:password@rabbitmq-local:15672"]
+    enabled: true
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch-local:9200"]
+  index: "metricbeat-%{+yyyy.MM.dd}"
+
+setup.template.name: "metricbeat"
+setup.template.pattern: "metricbeat-*"
+setup.template.enabled: true
+
+setup.kibana:
+  host: "http://kibana-local:5601"
+
+setup.dashboards.enabled: true
+setup.ilm.enabled: false
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/metricbeat
+  name: metricbeat
+  keepfiles: 7
+  permissions: 0644
+
+processors:
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+  - add_cloud_metadata: ~
+  - add_docker_metadata: ~

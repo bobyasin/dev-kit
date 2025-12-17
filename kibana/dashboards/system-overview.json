@@ -1,0 +1,18 @@
+{
+  "version": "8.17.2",
+  "objects": [
+    {
+      "id": "system-overview-dashboard",
+      "type": "dashboard",
+      "attributes": {
+        "title": "System Overview Dashboard",
+        "description": "Overview of system metrics, logs, and application performance",
+        "panelsJSON": "[]",
+        "timeRestore": false,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"match_all\":{}},\"filter\":[]}"
+        }
+      }
+    }
+  ]
+}

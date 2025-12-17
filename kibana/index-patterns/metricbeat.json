@@ -1,0 +1,14 @@
+{
+  "version": "8.17.2",
+  "objects": [
+    {
+      "id": "metricbeat-*",
+      "type": "index-pattern",
+      "attributes": {
+        "title": "metricbeat-*",
+        "timeFieldName": "@timestamp",
+        "fields": "[]"
+      }
+    }
+  ]
+}

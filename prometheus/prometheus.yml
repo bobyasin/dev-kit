@@ -1,0 +1,50 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Node Exporter for system metrics
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["node-exporter-local:9100"]
+
+  # Docker containers (if you expose metrics)
+  - job_name: "docker"
+    static_configs:
+      - targets: ["host.docker.internal:9323"]
+    metrics_path: /metrics
+
+  # Redis metrics (if redis_exporter is added)
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis-local:6379"]
+    metrics_path: /metrics
+
+  # MySQL metrics (if mysqld_exporter is added)
+  - job_name: "mysql"
+    static_configs:
+      - targets: ["mysql-local:3306"]
+    metrics_path: /metrics
+
+  # PostgreSQL metrics (if postgres_exporter is added)
+  - job_name: "postgres"
+    static_configs:
+      - targets: ["postgres-local:5432"]
+    metrics_path: /metrics
+
+  # Application metrics (add your app endpoints here)
+  - job_name: "my-app"
+    static_configs:
+      - targets: ["host.docker.internal:8080"] # For external apps
+      # - targets: ["my-app-local:8080"] # For Docker services
+    metrics_path: /metrics
+    scrape_interval: 5s

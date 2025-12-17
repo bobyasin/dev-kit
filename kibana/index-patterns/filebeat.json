@@ -1,0 +1,14 @@
+{
+  "version": "8.17.2",
+  "objects": [
+    {
+      "id": "filebeat-*",
+      "type": "index-pattern",
+      "attributes": {
+        "title": "filebeat-*",
+        "timeFieldName": "@timestamp",
+        "fields": "[]"
+      }
+    }
+  ]
+}

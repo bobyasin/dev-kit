@@ -1,0 +1,34 @@
+server.name: kibana
+server.host: "0.0.0.0"
+server.port: 5601
+elasticsearch.hosts: ["http://elasticsearch-local:9200"]
+
+# Encryption key for saved objects
+xpack.encryptedSavedObjects.encryptionKey: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+# Force Dark Mode - Multiple Methods
+uiSettings.overrides:
+  theme:darkMode: true
+  theme:version: v8
+  defaultIndex: "filebeat-*"
+  timepicker:timeDefaults: '{ "from": "now-15m", "to": "now" }'
+  discover:sampleSize: 1000
+  histogram:barTarget: 50
+  state:storeInSessionStorage: true
+
+# Additional UI customizations
+server.customResponseHeaders:
+  "X-Frame-Options": "SAMEORIGIN"
+
+# Logging
+logging.appenders:
+  file:
+    type: file
+    fileName: /usr/share/kibana/logs/kibana.log
+    layout:
+      type: json
+logging.root:
+  appenders:
+    - default
+    - file
+  level: info

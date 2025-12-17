@@ -1,0 +1,24 @@
+{
+  "version": "8.17.2",
+  "objects": [
+    {
+      "id": "live-logging-dashboard",
+      "type": "dashboard",
+      "attributes": {
+        "title": "Live Logging Dashboard",
+        "description": "Real-time log monitoring and analysis",
+        "panelsJSON": "[{\"version\":\"8.17.2\",\"gridData\":{\"x\":0,\"y\":0,\"w\":48,\"h\":15,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{\"enhancements\":{}},\"panelRefName\":\"panel_1\"}]",
+        "timeRestore": true,
+        "timeTo": "now",
+        "timeFrom": "now-15m",
+        "refreshInterval": {
+          "pause": false,
+          "value": 5000
+        },
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"match_all\":{}},\"filter\":[]}"
+        }
+      }
+    }
+  ]
+}
