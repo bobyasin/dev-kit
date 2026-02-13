@@ -1,0 +1,28 @@
+{
+  "index_patterns": ["metricbeat-*", "metrics-*"],
+  "priority": 100,
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "index.lifecycle.name": "metrics-policy",
+      "index.lifecycle.rollover_alias": "metrics",
+      "index.refresh_interval": "30s",
+      "index.codec": "best_compression"
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": {
+          "type": "date"
+        },
+        "metricset": {
+          "properties": {
+            "name": {
+              "type": "keyword"
+            }
+          }
+        }
+      }
+    }
+  }
+}

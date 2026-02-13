@@ -5,7 +5,7 @@ services:
   # RabbitMQ + Management
   # -----------------------------------------
   rabbitmq:
-    image: rabbitmq:3.11-management
+    image: heidiks/rabbitmq-delayed-message-exchange:3.12.10-management
     container_name: rabbitmq-local
     hostname: rabbitmq-local
     restart: unless-stopped
@@ -14,9 +14,16 @@ services:
       RABBITMQ_DEFAULT_PASS: test
       RABBITMQ_LOAD_DEFINITIONS: "1"
       RABBITMQ_DEFINITIONS_FILE: /etc/rabbitmq/definitions.json
+      # Ensure ports are explicitly bound
+      RABBITMQ_NODE_PORT: 5672
+      RABBITMQ_DIST_PORT: 25672
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      # AMQP port - explicitly bind to all interfaces
+      - "0.0.0.0:5672:5672"
+      # Management UI port - explicitly bind to all interfaces
+      - "0.0.0.0:15672:15672"
+      # Distribution port for clustering (optional but good to have)
+      - "0.0.0.0:25672:25672"
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
       - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
@@ -25,8 +32,18 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
+      start_period: 30s
     networks:
       - devnet
+    # Ensure container dependencies and startup order
+    depends_on: []
+    # Resource limits to prevent OOM kills
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
     logging:
       driver: "json-file"
       options:
@@ -312,12 +329,22 @@ services:
       - xpack.security.enabled=false
       - xpack.security.authc.api_key.enabled=false
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      # Disk space management
+      - cluster.routing.allocation.disk.threshold_enabled=true
+      - cluster.routing.allocation.disk.watermark.low=85%
+      - cluster.routing.allocation.disk.watermark.high=90%
+      - cluster.routing.allocation.disk.watermark.flood_stage=95%
+      # Index lifecycle management
+      - xpack.ilm.enabled=true
+      - indices.lifecycle.poll_interval=10m
     ports:
       - "9200:9200"
       - "9300:9300"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+      - ./elasticsearch/ilm-policies:/usr/share/elasticsearch/ilm-policies:ro
+      - ./elasticsearch/index-templates:/usr/share/elasticsearch/index-templates:ro
     healthcheck:
       test: ["CMD", "curl", "-fsSL", "http://localhost:9200/_cluster/health"]
       interval: 10s
@@ -328,9 +355,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G
         reservations:
-          memory: 512M
+          memory: 1G
     logging:
       driver: "json-file"
       options:
@@ -594,7 +621,7 @@ services:
     image: grafana/grafana:10.2.3
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "8090:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
