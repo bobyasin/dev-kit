@@ -335,8 +335,7 @@ services:
       - cluster.routing.allocation.disk.watermark.low=85%
       - cluster.routing.allocation.disk.watermark.high=90%
       - cluster.routing.allocation.disk.watermark.flood_stage=95%
-      # Index lifecycle management
-      - xpack.ilm.enabled=true
+      # Index lifecycle management (ILM is enabled by default in ES 8.x)
       - indices.lifecycle.poll_interval=10m
     ports:
       - "9200:9200"
@@ -422,10 +421,11 @@ services:
       - "APM_SERVER_SECRET_TOKEN=apm-secret-token"
       - "LOGGING_LEVEL=info"
     healthcheck:
-      test: ["CMD", "curl", "-fsSL", "http://localhost:8200/"]
+      test: ["CMD-SHELL", "pgrep -f apm-server || exit 1"]
       interval: 30s
       timeout: 15s
       retries: 15
+      start_period: 40s
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -724,15 +724,106 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # -----------------------------------------
+  # Redis Sentinel
+  # -----------------------------------------
+  redis-master:
+    container_name: "redis-master"
+    image: redis:6.0-alpine
+    command: redis-server
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-master-data:/data
+    networks:
+      - devnet
+
+  redis-slave1:
+    container_name: "redis-slave1"
+    image: redis:6.0-alpine
+    ports:
+      - "6381:6379"
+    command: redis-server --slaveof redis-master 6379
+    volumes:
+      - redis-slave1-data:/data
+    depends_on:
+      - redis-master
+    networks:
+      - devnet
+
+  redis-slave2:
+    container_name: "redis-slave2"
+    image: redis:6.0-alpine
+    ports:
+      - "6382:6379"
+    command: redis-server --slaveof redis-master 6379
+    volumes:
+      - redis-slave2-data:/data
+    depends_on:
+      - redis-master
+    networks:
+      - devnet
+
+  redis-sentinel1:
+    container_name: "redis-sentinel1"
+    image: redis:6.0-alpine
+    ports:
+      - "5002:5000"
+    command: redis-server /etc/sentinel.conf --sentinel --requirepass redisadminsentinel
+    volumes:
+      - "./sentinel/sentinel.conf:/etc/sentinel.conf"
+      - redis-sentinel1-data:/data
+    depends_on:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+    networks:
+      - devnet
+
+  redis-sentinel2:
+    container_name: "redis-sentinel2"
+    image: redis:6.0-alpine
+    ports:
+      - "5003:5000"
+    command: redis-server /etc/sentinel.conf --sentinel  --requirepass redisadminsentinel
+    volumes:
+      - "./sentinel/sentinel.conf:/etc/sentinel.conf"
+      - redis-sentinel2-data:/data
+    depends_on:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+    networks:
+      - devnet
+
+  redis-sentinel3:
+    container_name: "redis-sentinel3"
+    image: redis:6.0-alpine
+    ports:
+      - "5004:5000"
+    command: redis-server /etc/sentinel.conf --sentinel  --requirepass redisadminsentinel
+    volumes:
+      - "./sentinel/sentinel.conf:/etc/sentinel.conf"
+      - redis-sentinel3-data:/data
+    depends_on:
+      - redis-master
+      - redis-slave1
+      - redis-slave2
+    networks:
+      - devnet
+
 # -----------------------------------------
 # Persistent Volumes
 # -----------------------------------------
 volumes:
   rabbitmq-data:
   redis-data:
-  redis-master-new-data:
-  redis-slave1-new-data:
-  redis-slave2-new-data:
+  redis-master-data:
+  redis-slave1-data:
+  redis-slave2-data:
+  redis-sentinel1-data:
+  redis-sentinel2-data:
+  redis-sentinel3-data:
   mysql-data:
   postgres-data:
   mongodb-data:
